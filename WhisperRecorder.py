@@ -6,11 +6,13 @@ import os
 import logging
 import time
 import json
+from pynput import keyboard
 
 class WhisperRecorder:
-    def __init__(self, ui, model_name="tiny"):
+    def __init__(self, ui, keyboard_controller, model_name="tiny"):
         # Transcription Config
-        self.ui = ui  # This is a reference to the WhisperUI instance
+        self.ui = ui
+        self.keyboard_controller = keyboard_controller
         self.is_recording = False
         self.stream = None
         self.audio_frames = []
@@ -43,6 +45,10 @@ class WhisperRecorder:
         self.stream = self.audio.open(format=self.audio_format, channels=self.channels, rate=self.sample_rate, input=True, frames_per_buffer=self.chunk_size)
         self.is_recording = True
         self.audio_frames = []
+
+        # Start a separate thread for simulating keystrokes
+        self.keystroke_thread = threading.Thread(target=self.simulate_keystrokes)
+        self.keystroke_thread.start()
 
         while self.is_recording:
             data = self.stream.read(self.chunk_size)
@@ -84,6 +90,8 @@ class WhisperRecorder:
 
         self.ui.change_state_indicator("green", text="Transcription Complete!")
 
+        self.is_recording = False
+        self.keystroke_thread.join()
     
         self.ui.change_state_indicator("green", text="Complete!")
 
@@ -143,3 +151,19 @@ class WhisperRecorder:
         except Exception as e:
             print(f"Error loading model from config: {e}")
             self.model = whisper.load_model('tiny')
+
+    def simulate_keystrokes(self):
+        if self.ui.chat_mode.get():
+            # Press 'T' once to open the chat window
+            self.keyboard_controller.press(keyboard.KeyCode.from_char('t'))
+            self.keyboard_controller.release(keyboard.KeyCode.from_char('t'))
+            time.sleep(0.5)  # Short delay before starting the loop
+
+            # Cycle space and backspace while recording
+            while self.is_recording:
+                self.keyboard_controller.press(keyboard.Key.space)
+                self.keyboard_controller.release(keyboard.Key.space)
+                time.sleep(0.1)  # Short delay between space and backspace
+                self.keyboard_controller.press(keyboard.Key.backspace)
+                self.keyboard_controller.release(keyboard.Key.backspace)
+                time.sleep(0.9)  # Continue the loop every second

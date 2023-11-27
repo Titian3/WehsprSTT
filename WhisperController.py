@@ -19,7 +19,7 @@ class WhisperController:
         self.keyboard_controller = keyboard.Controller()
 
         # Initialize Recorder/Transcription
-        self.recorder = WhisperRecorder(self.whisper_ui)
+        self.recorder = WhisperRecorder(self.whisper_ui, self.keyboard_controller)
         
         # Start the mouse and keyboard listeners
         self.mouse_listener = mouse.Listener(on_click=self.on_click)
