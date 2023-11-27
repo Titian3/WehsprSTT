@@ -10,8 +10,8 @@ class WhisperUI:
         # Create the main application window
         self.root = tk.Tk()
         self.root.title("Wehspr")
-        icon = tk.PhotoImage(file='WEH.png')  # or .png
-        self.root.iconphoto(True, icon)
+        self.icon = tk.PhotoImage(file='WEH.png')  # or .png
+        self.root.iconphoto(True, self.icon)
 
         # Create a tab control
         self.tabControl = ttk.Notebook(self.root)
@@ -25,7 +25,10 @@ class WhisperUI:
         self.tabControl.add(self.config_tab, text='Config')
         self.tabControl.pack(expand=1, fill="both")
 
-        # Move the following UI elements into the main_tab
+        # Create a label for the image
+        self.icon_label = tk.Label(self.main_tab, image=self.icon)
+        self.icon_label.pack()
+
         # Header
         self.header = tk.Label(self.main_tab, text="Wehspr", font=("Helvetica", 16))
         self.header.pack()
