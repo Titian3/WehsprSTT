@@ -1,4 +1,4 @@
-# Wehspr - 
+# Wehspr - STT
 
 ## Description
 
