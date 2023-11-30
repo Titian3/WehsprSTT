@@ -38,6 +38,9 @@ class WhisperRecorder:
 
         self.load_model_from_config()
 
+        logging.info("Recorder finished loading, close loading box.")
+        self.ui.create_main_ui_window()
+        self.ui.close_loading_screen()
         logging.info("Whisper model loaded")
 
     def start_recording(self):

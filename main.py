@@ -1,14 +1,22 @@
 from WhisperController import WhisperController
+from WhisperUI import WhisperUI
 import logging
 
 def main():
-    # Configure logging
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
     logging.info("LOADING WEHSPER....")
-    logging.info("This can take a minute if very large model is used.")
-    whisper_controller = WhisperController()
+
+    logging.info("Setup UI.")
+    whisper_ui = WhisperUI()
+    
+    logging.info("Setup Controller.")
+    whisper_controller = WhisperController(whisper_ui)
+    whisper_ui.set_controller(whisper_controller)
+    whisper_ui.set_on_close_callback(whisper_controller.close_application)
+
+    logging.info("Start Controller.")
     whisper_controller.run()
+    
 
 if __name__ == "__main__":
     main()
-    

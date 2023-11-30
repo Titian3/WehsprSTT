@@ -3,32 +3,36 @@ from tkinter import ttk
 from tkinter import scrolledtext
 import json
 from pynput import keyboard, mouse
+import logging
 
 
 class WhisperUI:
-    def __init__(self, on_close_callback, controller):
+    def __init__(self):
         # Create the main application window
+        logging.info("UI initializing....")
         self.root = tk.Tk()
         self.root.title("Wehspr")
         self.icon = tk.PhotoImage(file='WEH.png')  # or .png
         self.root.iconphoto(True, self.icon)
 
-        # Create a tab control
-        self.tabControl = ttk.Notebook(self.root)
+        self.show_loading_screen()
 
-        # Create tabs
-        self.main_tab = ttk.Frame(self.tabControl)
-        self.config_tab = ttk.Frame(self.tabControl)
+    def create_main_ui_window(self):
+        #Create Tabs
+        self.create_main_window_tab_control()
 
-        # Add tabs to the notebook
-        self.tabControl.add(self.main_tab, text='Main')
-        self.tabControl.add(self.config_tab, text='Config')
-        self.tabControl.pack(expand=1, fill="both")
+        #Create main content
+        self.create_main_window_content()
 
-        # Create a label for the image
-        self.icon_label = tk.Label(self.main_tab, image=self.icon)
-        self.icon_label.pack()
+        # Configure tab
+        logging.info("Create Config Tab...")
+        self.create_config_ui()
 
+        # Load saved/default config
+        logging.info("Load config to UI....")
+        self.load_configuration()
+
+    def create_main_window_content(self):
         # Header
         self.header = tk.Label(self.main_tab, text="Wehspr", font=("Helvetica", 16))
         self.header.pack()
@@ -54,23 +58,24 @@ class WhisperUI:
         self.transcription_box = scrolledtext.ScrolledText(self.main_tab, wrap=tk.WORD)
         self.transcription_box.pack(pady=10, fill=tk.BOTH, expand=True)
 
-        # Set the callback for when the window is closed
-        self.root.protocol("WM_DELETE_WINDOW", on_close_callback)
+    def create_main_window_tab_control(self):
 
-        # Detect shortcut buttons
-        self.detect_record_button = tk.Button(self.config_tab, text="Detect", command=lambda: self.detect_shortcut('record'))
-        self.detect_paste_button = tk.Button(self.config_tab, text="Detect", command=lambda: self.detect_shortcut('paste'))
+        # Create a tab control
+        logging.info("Setting up tabs....")
+        self.tabControl = ttk.Notebook(self.root)
+        # Create tabs
+        self.main_tab = ttk.Frame(self.tabControl)
+        self.config_tab = ttk.Frame(self.tabControl)
 
-        self.detect_record_button.grid(row=0, column=2)
-        self.detect_paste_button.grid(row=1, column=2)
+        logging.info("Constructing main page....")
+        # Add tabs to the notebook
+        self.tabControl.add(self.main_tab, text='Main')
+        self.tabControl.add(self.config_tab, text='Config')
+        self.tabControl.pack(expand=1, fill="both")
 
-        # Set controller
-        self.controller = controller
-        # Configure tab
-        self.create_config_ui()
-
-        # Load saved/default config
-        self.load_configuration()
+        # Create a label for the image
+        self.icon_label = tk.Label(self.main_tab, image=self.icon)
+        self.icon_label.pack()
 
     # Updates the UI state indicator color (entire canvas)
     def change_state_indicator(self, color, text=""):
@@ -103,6 +108,8 @@ class WhisperUI:
         # Detect shortcut buttons
         self.detect_record_button = tk.Button(self.config_tab, text="Detect", command=lambda: self.detect_shortcut('record'))
         self.detect_paste_button = tk.Button(self.config_tab, text="Detect", command=lambda: self.detect_shortcut('paste'))
+        self.detect_record_button.grid(row=0, column=2)
+        self.detect_paste_button.grid(row=1, column=2)
 
         # Entry fields for shortcuts
         self.record_shortcut_entry = tk.Entry(self.config_tab)
@@ -196,3 +203,37 @@ class WhisperUI:
 
     def close_application(self):
         self.controller.close_application()
+
+    def show_loading_screen(self):
+        logging.info("Setup Loading screen....")
+        self.loading_window = tk.Toplevel(self.root)
+        self.loading_window.title("Loading")
+        self.loading_window.geometry("300x100")  # Example size, adjust as needed
+
+        # Create and add a label to the loading window
+        loading_label = tk.Label(self.loading_window, text="Loading WEHSPER model, please wait...")
+        loading_label.pack()
+
+        # Force the window and its contents to be updated
+        self.loading_window.update_idletasks()
+
+        # Make sure this window stays on top
+        self.loading_window.transient(self.root)
+        self.loading_window.grab_set()
+        self.loading_window.focus_set()
+        self.loading_window.lift()
+        self.loading_window.update()
+        logging.info("Loading Screen Set.")
+
+
+    def close_loading_screen(self):
+        # Ensure that this is run on the main thread
+        if self.loading_window:
+            self.root.after(0, self.loading_window.destroy)
+
+    def set_controller(self, controller):
+        self.controller = controller
+
+    def set_on_close_callback(self, on_close_callback):
+        self.root.protocol("WM_DELETE_WINDOW", on_close_callback)
+

@@ -9,10 +9,10 @@ import sys
 import json
 
 class WhisperController:
-    def __init__(self):     
+    def __init__(self, whisper_ui):     
 
         # Initialize UI with a reference to this controller and a callback for closing
-        self.whisper_ui = WhisperUI(self.close_application, self)
+        self.whisper_ui = whisper_ui
         
         self.transcribed_text = "..."
         self.transcription_lock = threading.Lock()
@@ -39,6 +39,8 @@ class WhisperController:
 
         # Load the configuration
         self.load_configuration()
+
+
 
 
     def start_recording(self):
@@ -73,16 +75,21 @@ class WhisperController:
         if self.transcription_lock.acquire(blocking=False):
             try:
                 if not self.whisper_ui.chat_mode.get():
+                    logging.info("Chat Mode paste")
+                    # Tap the 't' key first
+                    self.keyboard_controller.tap(keyboard.Key.esc)
+                    self.keyboard_controller.tap(keyboard.KeyCode.from_char('t'))
+                    self.keyboard_controller.press(keyboard.Key.backspace)
+                    self.keyboard_controller.press(keyboard.Key.backspace)
+                    self.keyboard_controller.press(keyboard.Key.backspace)
+                    time.sleep(0.1)  # Tiny pause
                     pyperclip.copy(text)
                     with self.keyboard_controller.pressed(keyboard.Key.ctrl):
                         self.keyboard_controller.press('v')
                         self.keyboard_controller.release('v')
                 else:
-                    # Non-admin mode
-                    # Tap the 't' key first
-                    self.keyboard_controller.tap(keyboard.KeyCode.from_char('t'))
-                    time.sleep(0.1)  # Tiny pause
-
+                    # Non-chat mode
+                    
                     # Copy text to clipboard
                     pyperclip.copy(text)
 
@@ -116,7 +123,7 @@ class WhisperController:
             
     
     def on_press(self, key):
-        if key == keyboard.Key.esc:
+        if key == keyboard.Key.f3:
             print("Exiting...")
             # Initiate the UI close
             self.whisper_ui.root.destroy()
@@ -160,6 +167,7 @@ class WhisperController:
     def run(self):
         try:
             self.whisper_ui.start()
+            logging.info("Setup Complete.")
         finally:
             self.recorder.terminate()
             self.mouse_listener.stop()
